@@ -1,0 +1,19 @@
+options:
+  # Minimum distance out from the main island you can get teleported
+  min_radius: 2000
+  # Maximum distance from the main island you can get teleported
+  max_radius: 2300
+  # Minimum y level you can get teleported
+  min_y: 30
+  # Maximum y level you can get teleported
+  max_y: 80
+  # Number of attempts to try and teleport
+  max_attempts: 30
+# Messages only support MiniMessage
+messages:
+  # Message that gets sent to the player when the plugin could not find a location in the number of attempts
+  failed_tp: "<red>Failed to teleport you. Please try again."
+  # Message that gets sent to the player when they successfully teleport
+  teleported: "<blue>You have been teleported to a galaxy far, far away"
+  # Config reloaded. Only reload this file and not gateways.yml
+  config_reload: "<green>Config reloaded."

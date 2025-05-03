@@ -1,0 +1,9 @@
+name: EndTP
+version: '1.0-SNAPSHOT'
+main: me.rabbittv.endTP.EndTP
+api-version: '1.21'
+commands:
+  endtpreload:
+    description: Reload the config
+    usage: /<command>
+    permission: endtp.reload
