@@ -1,8 +1,8 @@
 options:
   # Minimum distance out from the main island you can get teleported
-  min_radius: 2000
+  min_radius: 5000
   # Maximum distance from the main island you can get teleported
-  max_radius: 2300
+  max_radius: 5300
   # Minimum y level you can get teleported
   min_y: 30
   # Maximum y level you can get teleported
