@@ -1,0 +1,9 @@
+# Messages only support MiniMessage
+
+
+# Message that gets sent to the player when the plugin could not find a location in the number of attempts
+failed_tp: "<red>Failed to teleport you. Please try again."
+# Message that gets sent to the player when they successfully teleport
+teleported: "<blue>You have been teleported to a galaxy far, far away"
+# Config reloaded. Only reload this file and not gateways.yml
+config_reload: "<green>Config reloaded."

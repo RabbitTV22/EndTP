@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class EndTP extends JavaPlugin implements Listener {
-
+    private FileConfiguration messages;
     private ConfigurationSection options;
     private File dataFile;
     private FileConfiguration gatewayData;
@@ -45,8 +45,9 @@ public final class EndTP extends JavaPlugin implements Listener {
     }
 
     private void loadConfigMessages() {
+        saveResource("messages.yml", false);
+        messages = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages.yml"));
         reloadConfig();
-        ConfigurationSection messages = getConfig().getConfigurationSection("messages");
         options = getConfig().getConfigurationSection("options");
 
         msgTeleportSuccess = mm.deserialize(messages.getString("teleported", "<blue>You have been teleported to a galaxy far, far away."));
@@ -112,7 +113,7 @@ public final class EndTP extends JavaPlugin implements Listener {
         Location destination = locationCache.get(key);
 
         if (destination == null) {
-            destination = generateSafeEndLocation(world, options.getInt("min_radius", 5000), options.getInt("max_radius", 5300));
+            destination = generateSafeEndLocation(world, options.getInt("min_radius", 5100), options.getInt("max_radius", 5300));
             if (destination == null) {
                 player.sendMessage(msgTeleportFail);
                 return;
@@ -131,35 +132,59 @@ public final class EndTP extends JavaPlugin implements Listener {
 
     private Location generateSafeEndLocation(World world, int minRadius, int maxRadius) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        int maxAttempts = options.getInt("max_attempts", 30);
+        int maxAttempts = options.getInt("max_attempts", 10);
 
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             double angle = random.nextDouble(0, Math.PI * 2);
+
+            // Choose a radius between min and max radius
             double radius = minRadius + random.nextDouble() * (maxRadius - minRadius);
+
             int x = (int) Math.round(Math.cos(angle) * radius);
             int z = (int) Math.round(Math.sin(angle) * radius);
 
-            int y = findSafeY(world, x, z);
-            if (y != -1) {
-                return new Location(world, x + 0.5, y + 1, z + 0.5);
-            }
+            int min_y = options.getInt("min_island_y", 140);
+            int max_y = options.getInt("max_island_y", 180);
+            int range = max_y - min_y + 1;
+            int island_y = (int) (Math.random() * range) + min_y;
+            Location islandCenter = new Location(world, x, island_y, z);
+
+            generateEndIsland(world, islandCenter);
+
+            return new Location(world, x + 0.5, islandCenter.getY() + 3, z + 0.5);
         }
         return null;
     }
 
-    private int findSafeY(World world, int x, int z) {
-        int minY = options.getInt("min_y", 30);
-        int maxY = options.getInt("max_y", 80);
 
-        for (int y = maxY; y >= minY; y--) {
-            Block ground = world.getBlockAt(x, y, z);
-            if (!ground.getType().isSolid()) continue;
-            if (world.getBlockAt(x, y + 1, z).isEmpty() && world.getBlockAt(x, y + 2, z).isEmpty()) {
-                return y;
+    private void generateEndIsland(World world, Location center) {
+        int radius = options.getInt("island_radius", 5);
+        int height = options.getInt("island_thickness", 3);
+        int airGapHeight = options.getInt("air_gap", 3);
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                double dist = Math.sqrt(x * x + z * z);
+                if (dist <= radius + 0.5) {
+                    int baseX = center.getBlockX() + x;
+                    int baseZ = center.getBlockZ() + z;
+
+                    // Clear space above the platform
+                    for (int y = height; y < height + airGapHeight; y++) {
+                        Block airBlock = world.getBlockAt(baseX, center.getBlockY() + y, baseZ);
+                        airBlock.setType(Material.AIR);
+                    }
+
+                    // Build the platform
+                    for (int y = 0; y < height; y++) {
+                        Block block = world.getBlockAt(baseX, center.getBlockY() + y, baseZ);
+                        block.setType(Material.END_STONE);
+                    }
+                }
             }
         }
-        return -1;
     }
+
 
     private String serializeLocation(Location loc) {
         return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
